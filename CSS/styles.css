@@ -1,0 +1,42 @@
+/* Importacion de la tipografia a usar */
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  box-sizing: inherit;
+}
+
+.open-sans {
+  font-family: "Open Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: weight;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+
+/* Estilos para el header */
+header {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: medium #000 solid;
+  background-color: #f5deb3;
+
+  h1 {
+    font-size: 5rem;
+    border-bottom: medium #000 solid;
+    margin: 0;
+  }
+  p {
+    font-size: 1.5rem;
+  }
+}

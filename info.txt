@@ -1,0 +1,36 @@
+
+Blanco (#FFFFFF)
+Gris claro (#EFEFEF)
+Negro (#000000)
+Azul claro (#ADD8E6)
+Gris oscuro (#555555)
+
+Encabezado y Barra de Navegación:
+
+Fondo: Blanco (#FFFFFF) o Gris claro (#EFEFEF)
+Texto: Negro (#000000) o Gris oscuro (#555555)
+Enlaces: Negro o Azul claro (#ADD8E6) para resaltar los enlaces activos
+
+Cuerpo Principal:
+
+Fondo: Blanco o Gris claro para mantener la simplicidad
+Texto: Negro o Gris oscuro para una buena legibilidad
+Secciones o Divisiones: Puedes usar un tono ligeramente más oscuro o más claro del fondo principal para diferenciar visualmente las secciones.
+
+Botones y Enlaces:
+
+Fondo: Puedes usar el mismo color del encabezado o un tono ligeramente más oscuro para resaltarlos.
+Texto: Blanco sobre un fondo oscuro y Negro sobre un fondo claro para un buen contraste.
+Color de resaltado: Puedes usar Azul claro u otro color suave para destacar los botones al pasar el cursor.
+
+Secciones Especiales (como secciones de proyectos o testimonios):
+
+Fondo: Blanco o Gris claro para mantener la coherencia.
+Texto: Negro o Gris oscuro para una buena legibilidad.
+Elementos destacados: Puedes usar un color más vibrante o un tono de tu paleta de colores para resaltar ciertos elementos dentro de estas secciones.
+
+Pie de Página:
+
+Fondo: Blanco o Gris claro.
+Texto: Negro o Gris oscuro.
+Enlaces y detalles de contacto: Puedes usar el mismo estilo que los enlaces del encabezado para mantener la consistencia.

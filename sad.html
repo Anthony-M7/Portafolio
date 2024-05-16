@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Encabezado Animado</title>
+    <style>
+      #header {
+        font-size: 24px;
+        font-family: Arial, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="header">Este es un encabezado animado</h1>
+
+    <script>
+      // Texto completo del encabezado
+      var textoCompleto = "Este es un encabezado animado";
+      var indice = 0;
+      var velocidad = 100; // Velocidad de aparición en milisegundos
+
+      function mostrarLetra() {
+        var encabezado = document.getElementById("header");
+        encabezado.textContent += textoCompleto.charAt(indice);
+        indice++;
+        if (indice < textoCompleto.length) {
+          setTimeout(mostrarLetra, velocidad);
+        }
+      }
+
+      // Comienza a mostrar letra por letra cuando la página se carga
+      window.onload = function () {
+        mostrarLetra();
+      };
+    </script>
+  </body>
+</html>
