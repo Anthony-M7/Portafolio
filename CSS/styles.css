@@ -20,6 +20,17 @@ body {
   font-variation-settings: "wdth" 100;
 }
 
+@keyframes entrada {
+  from {
+    opacity: 0;
+    transform: translateY(-20px); /* Desplazamiento hacia arriba */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); /* Sin desplazamiento */
+  }
+}
+
 /* Estilos para el header */
 header {
   width: 100%;
@@ -28,15 +39,32 @@ header {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: medium #000 solid;
+  border: 8px #000 solid;
   background-color: #f5deb3;
 
   h1 {
-    font-size: 5rem;
+    width: 70%;
+    text-align: center;
+    font-size: 6.5rem;
     border-bottom: medium #000 solid;
     margin: 0;
   }
   p {
     font-size: 1.5rem;
+  }
+  nav {
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+
+    a {
+      color: #000;
+      transition: all 200ms ease; /* Transición de 0.3 segundos */
+      animation: entrada 0.5s ease forwards; /* Animación de entrada */
+    }
+    a:hover {
+      color: #ff6600; /* Cambio de color al pasar el ratón */
+      transform: scale(1.1); /* Aumentar el tamaño al pasar el ratón */
+    }
   }
 }
