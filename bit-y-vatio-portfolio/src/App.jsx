@@ -14,6 +14,8 @@ function App() {
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15; // Límite de proyectos por página
+
+  const [searchTerm, setSearchTerm] = useState("");
   
   //Vista del home
   const [currentView, setCurrentView] = useState('home');
@@ -80,45 +82,38 @@ function App() {
         const originalRepos = allRepos.filter(repo => !repo.fork && !excludedRepos.includes(repo.name));
 
         // Formateamos TODOS los repositorios originales
-        // (Dentro de tu useEffect, donde mapeas 'formattedProjects')
-        const formattedProjects = originalRepos.map(repo => {
-          // Clasificador automático basado en las etiquetas (topics) de GitHub
-          const topics = repo.topics ? repo.topics.join(' ').toLowerCase() : '';
-          let category = 'Otros';
-          
-          if (topics.includes('ia') || topics.includes('ai') || topics.includes('machine-learning')) {
-            category = 'Inteligencia Artificial';
-          } else if (topics.includes('web') || topics.includes('react') || topics.includes('django') || topics.includes('html')) {
-            category = 'Desarrollo Web';
-          } else if (topics.includes('cli') || topics.includes('bot') || topics.includes('automation') || topics.includes('automatizacion')) {
-            category = 'Automatización';
-          } else if (topics.includes('canvas') || topics.includes('video') || topics.includes('multimedia')) {
-            category = 'Herramientas Multimedia';
-          }
+        // AQUÍ VA LA LÓGICA DE TRANSFORMACIÓN
+          const transformedProjects = originalRepos.map(repo => {
+            // 1. Buscamos el tag oculto [cat:Nombre] en la descripción
+            const categoryMatch = repo.description?.match(/\[cat:(.*?)\]/);
+            const extractedCategory = categoryMatch ? categoryMatch[1] : 'Otros';
+            
+            // 2. Limpiamos la descripción para que no se vea el [cat:...] en la web
+            const cleanDescription = repo.description?.replace(/\[cat:.*?\]/, '').trim();
 
-          return {
-            id: repo.id,
-            name: repo.name,
-            owner: repo.owner.login, 
-            description: repo.description || 'System data unavailable.',
-            stars: repo.stargazers_count,
-            forks: repo.forks_count,
-            url: repo.html_url,
-            // Guardamos la fecha real
-            updatedAt: repo.pushed_at || repo.updated_at, 
-            language: repo.language || 'Code',
-            tags: repo.topics && repo.topics.length > 0 ? repo.topics.slice(0, 3) : ['System'],
-            category: category // <-- NUEVO: Guardamos la categoría calculada
-          };
-        });
+            // 3. Retornamos el objeto con los datos que ya usabas + los nuevos campos
+            return {
+              id: repo.id,
+              name: repo.name,
+              description: cleanDescription || "Sin descripción", // Usamos la limpia
+              category: extractedCategory, // Este es el que usará tu filtro
+              url: repo.html_url,
+              stars: repo.stargazers_count,
+              forks: repo.forks_count,
+              language: repo.language,
+              owner: repo.owner.login,
+              updatedAt: repo.updated_at,
+              tags: repo.topics // GitHub usa "topics" como tags
+            };
+          });
 
         // ORDENAMIENTO: Ordenamos del más nuevo al más viejo usando la fecha
-        const sortedProjects = formattedProjects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        const sortedProjects = transformedProjects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
         setProjects(sortedProjects);
 
         // Guardamos TODOS en el estado
-        setProjects(formattedProjects);
+        setProjects(sortedProjects);
       } catch (error) {
         console.error("Error al conectar con GitHub:", error);
       }
@@ -178,7 +173,10 @@ function App() {
                       <button className="px-8 py-4 border border-vatio-yellow text-vatio-yellow font-bold uppercase tracking-wider hover:bg-vatio-yellow hover:text-black transition-colors">
                         Último Video
                       </button>
-                      <button className="px-8 py-4 border border-bit-cyan text-bit-cyan font-bold uppercase tracking-wider hover:bg-bit-cyan hover:text-black transition-colors">
+                      <button onClick={() => {
+                        setCurrentView('archive');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }} className="px-8 py-4 border border-bit-cyan text-bit-cyan font-bold uppercase tracking-wider hover:bg-bit-cyan hover:text-black transition-colors">
                         Ver Proyectos
                       </button>
                     </div>
@@ -258,6 +256,17 @@ function App() {
                     </div>
                   )}
                 </div>
+
+                <button 
+                  onClick={() => {
+                    setCurrentView('videos');
+                    setCurrentPage(1); // Resetear a pág 1
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="mt-12 group border border-vatio-yellow/30 px-8 py-3 text-vatio-yellow font-bit text-xs tracking-widest hover:bg-vatio-yellow/10 transition-all"
+                >
+                  EXPLORAR VIDEOTECA [+]
+                </button>
               </div>
             </section>
 
@@ -378,6 +387,8 @@ function App() {
         const indexOfFirstProject = indexOfLastProject - itemsPerPage;
         const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
         const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+
+        
 
         // 2. RETORNO DEL DISEÑO
         return (
@@ -526,11 +537,124 @@ function App() {
           </div>
         );
       
+      case 'videos':
+        const filteredVideos = videos.filter(video => 
+          video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          video.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        const featuredVideo = filteredVideos[0]; 
+        const remainingVideos = filteredVideos.slice(1);
+
+        // Paginación para el grid inferior
+        const vPerPage = 6;
+        const lastIdx = currentPage * vPerPage;
+        const firstIdx = lastIdx - vPerPage;
+        const currentGridVideos = remainingVideos.slice(firstIdx, lastIdx);
+        const totalVPages = Math.ceil(remainingVideos.length / vPerPage);
+
+        // 1. Filtramos los videos según lo que el usuario escribe
+        return (
+          <div className="pt-32 pb-24 relative neo-grid bg-[#0a0a0a] min-h-screen animate-fade-in">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              
+              {/* CABECERA Y BUSCADOR (Top del boceto) */}
+              <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div className="text-left">
+                  <button 
+                    onClick={() => { setCurrentView('home'); window.scrollTo({ top: 0 }); }}
+                    className="flex items-center gap-2 text-gray-500 font-bit text-[10px] mb-4 hover:text-vatio-yellow transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">arrow_back</span> REGRESAR
+                  </button>
+                  <h2 className="text-5xl font-vatio italic text-white leading-none">
+                    GALERIA <span className="text-vatio-yellow">DE VIDEOS</span>
+                  </h2>
+                </div>
+                
+                {/* Barra de búsqueda sutil */}
+                <div className="w-full md:w-72 relative">
+                  <input 
+                    type="text" 
+                    placeholder="BUSCAR VIDEOS..." 
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1); // Reinicia a la pág 1 al buscar
+                    }}
+                    className="w-full bg-white/5 border border-white/10 py-2 px-4 font-bit text-[10px] text-white focus:border-vatio-yellow outline-none transition-all"
+                  />
+                  <span className="material-symbols-outlined absolute right-3 top-2 text-gray-500 text-sm">search</span>
+                </div>
+              </div>
+
+              {/* VIDEO DESTACADO (La pieza central de tu boceto) */}
+              {featuredVideo && (
+                <div className="relative group mb-20 border border-white/10 bg-[#111] overflow-hidden">
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Miniatura Grande */}
+                    <div className="lg:w-2/3 relative aspect-video overflow-hidden">
+                      <img 
+                        src={featuredVideo.thumbnail} 
+                        className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <a href={featuredVideo.url} target="_blank" rel="noopener noreferrer" className="w-20 h-20 bg-vatio-yellow flex items-center justify-center rounded-full hover:scale-110 transition-transform">
+                          <span className="material-symbols-outlined text-black text-5xl">play_arrow</span>
+                        </a>
+                      </div>
+                    </div>
+                    {/* Info Destacada */}
+                    <div className="lg:w-1/3 p-8 flex flex-col justify-center">
+                      <span className="text-vatio-yellow font-bit text-[10px] tracking-[0.3em] mb-4 block">NEW RELEASE</span>
+                      <h3 className="text-3xl font-vatio text-white mb-4 uppercase leading-tight">{featuredVideo.title}</h3>
+                      <p className="text-gray-400 font-bit text-xs leading-relaxed mb-8">{featuredVideo.description}</p>
+                      <div className="flex gap-4">
+                        <span className="border border-white/20 px-3 py-1 text-[9px] font-bit text-gray-500">{featuredVideo.duration}</span>
+                        <span className="border border-white/20 px-3 py-1 text-[9px] font-bit text-gray-500">{featuredVideo.category}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Detalles decorativos "System" */}
+                  <div className="absolute top-0 right-0 p-2 opacity-20 font-bit text-[8px] text-white vertical-text">DECODING_VIDEO_STREAM...</div>
+                </div>
+              )}
+
+              {/* GRID INFERIOR (Resto de videos) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                {currentGridVideos.map((video) => (
+                  <div key={video.id} className="group border border-white/5 bg-[#0f0f0f] hover:border-vatio-yellow transition-all duration-500">
+                    <div className="relative aspect-video overflow-hidden">
+                      <img src={video.thumbnail} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                      <div className="absolute bottom-0 left-0 bg-vatio-yellow text-black font-bit text-[9px] px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        PLAY NOW
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <h4 className="text-white font-vatio text-sm mb-2 truncate uppercase">{video.title}</h4>
+                      <p className="text-gray-500 font-bit text-[10px] line-clamp-2 leading-relaxed">{video.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Paginación similar a la de Proyectos */}
+              {totalVPages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-12 font-bit text-[10px]">
+                  <button onClick={() => setCurrentPage(p => Math.max(p-1, 1))} disabled={currentPage === 1} className="px-4 py-2 border border-white/10 text-gray-500 hover:border-vatio-yellow disabled:opacity-10">PREV</button>
+                  <span className="text-vatio-yellow">0{currentPage} / 0{totalVPages}</span>
+                  <button onClick={() => setCurrentPage(p => Math.min(p+1, totalVPages))} disabled={currentPage === totalVPages} className="px-4 py-2 border border-white/10 text-gray-500 hover:border-vatio-yellow disabled:opacity-10">NEXT</button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        );
 
       case 'publications':
         return (
           <div className="pt-32 min-h-screen flex items-center justify-center text-bit-cyan font-bit text-2xl animate-pulse">
-            PUBLICATIONS_MODULE_OFFLINE
+            ::: COMMING SOON :::
           </div>
         );
 
@@ -568,14 +692,13 @@ function App() {
             {/* Botón Videos */}
             <button 
               onClick={() => {
-                setCurrentView('home');
-                // Un ligero retraso para que React tenga tiempo de dibujar el Home si estábamos en Projects
-                setTimeout(() => document.getElementById('videos')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                setCurrentView('videos');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }} 
-              className={`relative text-sm font-bold uppercase tracking-widest font-bit group pb-1 transition-colors ${currentView === 'home' ? 'text-gray-300' : 'text-gray-400 hover:text-bit-cyan'}`}
+              className={`relative text-sm font-bold uppercase tracking-widest font-bit group pb-1 transition-colors ${currentView === 'videos' ? 'text-bit-cyan' : 'text-gray-400 hover:text-bit-cyan'}`}
             >
               Videos
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-bit-cyan transition-all duration-300 group-hover:w-full"></span>
+              <span className={`absolute -bottom-1 left-0 h-0.5 bg-bit-cyan transition-all duration-300 ${currentView === 'videos' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </button>
 
             {/* Botón Projects - EL ACTIVADOR DEL ARCHIVE */}
@@ -594,7 +717,7 @@ function App() {
             {/* Botón Publications */}
             <button 
               onClick={() => {
-                setCurrentView('home');
+                setCurrentView('publications');
                 setTimeout(() => document.getElementById('publications')?.scrollIntoView({ behavior: 'smooth' }), 100);
               }} 
               className="relative text-sm font-bold text-gray-400 hover:text-bit-cyan transition-colors uppercase tracking-widest font-bit group pb-1"
@@ -620,6 +743,8 @@ function App() {
           </div>
 
         </div>
+
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-bit-cyan via-vatio-yellow to-bit-cyan"></div>
       </nav>
 
       {renderView()}
@@ -651,10 +776,18 @@ function App() {
 
             {/* Derecha: Botones de Redes Sociales / Enlaces */}
             <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-vatio-yellow hover:text-vatio-yellow text-gray-400 transition-all bg-white/5 group">
+              <a onClick={() => {
+                setCurrentView('videos');
+                setCurrentPage(1); // Resetear a pág 1
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-vatio-yellow hover:text-vatio-yellow text-gray-400 transition-all bg-white/5 group cursor-pointer">
+              
                 <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">video_library</span>
               </a>
-              <a href="#" className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-bit-cyan hover:text-bit-cyan text-gray-400 transition-all bg-white/5 group">
+              <a onClick={() => {
+                        setCurrentView('archive');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }} className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-bit-cyan hover:text-bit-cyan text-gray-400 transition-all bg-white/5 group cursor-pointer">
                 <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">code_blocks</span>
               </a>
               <a href="#" className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-vatio-yellow hover:text-vatio-yellow text-gray-400 transition-all bg-white/5 group">
