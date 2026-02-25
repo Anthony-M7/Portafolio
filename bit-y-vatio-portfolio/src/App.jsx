@@ -673,7 +673,7 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex justify-between items-center">
           
           {/* Logo Izquierda - Actúa como botón de "Inicio" */}
-          <div className="flex items-center">
+          <div className="flex items-center justify-center align-center">
             <button 
               onClick={() => {
                 setCurrentView('home');
@@ -684,6 +684,13 @@ function App() {
               {/* Ajusté las clases de la imagen para que se vea perfectamente dentro del contenedor */}
               <img src={logoCircular} alt="Bit y Vatio" className="w-full h-full object-contain" />
             </button>
+
+            <a onClick={() => {
+                setCurrentView('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} className='cursor-pointer'>
+              <span className="text-2xl lg:text-4xl font-black italic tracking-tighter leading-[0.5] ms-3 glitch-text transition-all duration-300">BIT<span className="text-bit-cyan">&</span><span className="text-vatio-yellow">VATIO</span></span>
+            </a>
           </div>
 
           {/* Links y Botón Derecha */}
